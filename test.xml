@@ -1,0 +1,27 @@
+let
+    Fonte = Folder.Files("C:\Users\Airton Fialla\Desktop\Banco de dados Transportes TESTE"),
+    #"Arquivos Ocultos Filtrados1" = Table.SelectRows(Fonte, each [Attributes]?[Hidden]? <> true),
+    #"Invocar Função Personalizada1" = Table.AddColumn(#"Arquivos Ocultos Filtrados1", "Transformar Arquivo", each #"Transformar Arquivo"([Content])),
+    #"Colunas Renomeadas1" = Table.RenameColumns(#"Invocar Função Personalizada1", {"Name", "Nome da Origem"}),
+    #"Outras Colunas Removidas1" = Table.SelectColumns(#"Colunas Renomeadas1", {"Nome da Origem", "Transformar Arquivo"}),
+    #"Coluna de Tabela Expandida1" = Table.ExpandTableColumn(#"Outras Colunas Removidas1", "Transformar Arquivo", Table.ColumnNames(#"Transformar Arquivo"(#"Arquivo de Amostra"))),
+    #"Tipo Alterado" = Table.TransformColumnTypes(#"Coluna de Tabela Expandida1",{{"Nome da Origem", type text}, {"CTe", type any}, {"protCTe", type any}, {"Attribute:versao", Int64.Type}}),
+    #"CTe Expandido" = Table.ExpandTableColumn(#"Tipo Alterado", "CTe", {"infCte"}, {"CTe.infCte"}),
+    #"CTe.infCte Expandido" = Table.ExpandTableColumn(#"CTe Expandido", "CTe.infCte", {"ide", "emit", "dest", "vPrest", "imp", "infCTeNorm"}, {"CTe.infCte.ide", "CTe.infCte.emit", "CTe.infCte.dest", "CTe.infCte.vPrest", "CTe.infCte.imp", "CTe.infCte.infCTeNorm"}),
+    #"CTe.infCte.ide Expandido" = Table.ExpandTableColumn(#"CTe.infCte Expandido", "CTe.infCte.ide", {"dhEmi"}, {"CTe.infCte.ide.dhEmi"}),
+    #"CTe.infCte.emit Expandido" = Table.ExpandTableColumn(#"CTe.infCte.ide Expandido", "CTe.infCte.emit", {"CNPJ", "xNome"}, {"CTe.infCte.emit.CNPJ", "CTe.infCte.emit.xNome"}),
+    #"CTe.infCte.dest Expandido" = Table.ExpandTableColumn(#"CTe.infCte.emit Expandido", "CTe.infCte.dest", {"CNPJ", "xNome", "enderDest", "fone"}, {"CTe.infCte.dest.CNPJ", "CTe.infCte.dest.xNome", "CTe.infCte.dest.enderDest", "CTe.infCte.dest.fone"}),
+    #"CTe.infCte.dest.enderDest Expandido" = Table.ExpandTableColumn(#"CTe.infCte.dest Expandido", "CTe.infCte.dest.enderDest", {"xLgr", "xBairro", "xMun", "UF"}, {"CTe.infCte.dest.enderDest.xLgr", "CTe.infCte.dest.enderDest.xBairro", "CTe.infCte.dest.enderDest.xMun", "CTe.infCte.dest.enderDest.UF"}),
+    #"CTe.infCte.vPrest Expandido" = Table.ExpandTableColumn(#"CTe.infCte.dest.enderDest Expandido", "CTe.infCte.vPrest", {"vTPrest", "Comp"}, {"CTe.infCte.vPrest.vTPrest", "CTe.infCte.vPrest.Comp"}),
+    #"CTe.infCte.vPrest.Comp Expandido" = Table.ExpandTableColumn(#"CTe.infCte.vPrest Expandido", "CTe.infCte.vPrest.Comp", {"xNome", "vComp"}, {"CTe.infCte.vPrest.Comp.xNome", "CTe.infCte.vPrest.Comp.vComp"}),
+    #"CTe.infCte.imp Expandido" = Table.ExpandTableColumn(#"CTe.infCte.vPrest.Comp Expandido", "CTe.infCte.imp", {"ICMS"}, {"CTe.infCte.imp.ICMS"}),
+    #"CTe.infCte.imp.ICMS Expandido" = Table.ExpandTableColumn(#"CTe.infCte.imp Expandido", "CTe.infCte.imp.ICMS", {"ICMSSN"}, {"CTe.infCte.imp.ICMS.ICMSSN"}),
+    #"CTe.infCte.imp.ICMS.ICMSSN Expandido" = Table.ExpandTableColumn(#"CTe.infCte.imp.ICMS Expandido", "CTe.infCte.imp.ICMS.ICMSSN", {"CST", "indSN"}, {"CTe.infCte.imp.ICMS.ICMSSN.CST", "CTe.infCte.imp.ICMS.ICMSSN.indSN"}),
+    #"CTe.infCte.infCTeNorm Expandido" = Table.ExpandTableColumn(#"CTe.infCte.imp.ICMS.ICMSSN Expandido", "CTe.infCte.infCTeNorm", {"infCarga"}, {"CTe.infCte.infCTeNorm.infCarga"}),
+    #"CTe.infCte.infCTeNorm.infCarga Expandido" = Table.ExpandTableColumn(#"CTe.infCte.infCTeNorm Expandido", "CTe.infCte.infCTeNorm.infCarga", {"vCarga"}, {"CTe.infCte.infCTeNorm.infCarga.vCarga"}),
+    #"Colunas Renomeadas" = Table.RenameColumns(#"CTe.infCte.infCTeNorm.infCarga Expandido",{{"CTe.infCte.emit.xNome", "CTe.infCte.emit.xNome TRANSPORTADORAS"}, {"CTe.infCte.dest.xNome", "CTe.infCte.dest.xNome CLIENTE"}, {"CTe.infCte.ide.dhEmi", "CTe.infCte.ide.dhEmi Data Emissão CTE"}, {"CTe.infCte.vPrest.Comp.vComp", "CTe.infCte.vPrest.Comp.vComp Frete total"}, {"protCTe", "protCTe"}}),
+    #"Dividir Coluna por Delimitador" = Table.SplitColumn(#"Colunas Renomeadas", "CTe.infCte.ide.dhEmi Data Emissão CTE", Splitter.SplitTextByDelimiter("T", QuoteStyle.Csv), {"CTe.infCte.ide.dhEmi Data Emissão CTE.1", "CTe.infCte.ide.dhEmi Data Emissão CTE.2"}),
+    #"Tipo Alterado1" = Table.TransformColumnTypes(#"Dividir Coluna por Delimitador",{{"CTe.infCte.ide.dhEmi Data Emissão CTE.1", type date}, {"CTe.infCte.ide.dhEmi Data Emissão CTE.2", type time}}),
+    #"Colunas Removidas" = Table.RemoveColumns(#"Tipo Alterado1",{"CTe.infCte.ide.dhEmi Data Emissão CTE.2"})
+in
+    #"Colunas Removidas"
